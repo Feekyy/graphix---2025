@@ -1,1 +1,1 @@
-Repository for Graphic lesson at University of Miskolc. Contributor: Vitkolczi Dániel (Neptun: XPGMCH)
+Repository for Graphic lesson at University of Miskolc. Editor: Vitkolczi Dániel (Neptun: XPGMCH)
