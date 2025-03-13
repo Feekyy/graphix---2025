@@ -22,4 +22,31 @@ typedef struct Point
     float y;
 } Point;
 
+typedef struct Line 
+{
+    Point start;
+    Point end;
+    RGBColor color;
+} Line;
+
+typedef struct Square
+{
+    Point top_left;
+    float width;
+    float height;
+    RGBColor color;
+} Square;
+
+typedef struct ObjectList
+{
+    ShapeType shape_type;
+    union 
+    {
+        Line line;
+        Square square;
+    };
+
+    struct ObjectList* next;
+}
+
 #endif

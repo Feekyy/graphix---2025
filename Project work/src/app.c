@@ -9,6 +9,12 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#define MAX_OBJECTS 5
+
+Line objects[MAX_OBJECTS];
+int object_count = 0;
+int overwrite = 0;
+
 int winWidth = 800;
 int winHeight = 600;
 const float SIDEBAR_WIDTH = 0.34f;
@@ -18,7 +24,7 @@ Point start_point = {-1, -1};
 Point end_point = {-1, -1}; 
 bool drawing = false;
 
-RGBColor CurrentColor = {255, 0, 0};
+RGBColor CurrentColor = {255, 255, 255};
 
 ShapeType currentShape = SHAPE_LINE;
 
@@ -33,7 +39,7 @@ int initialize_app(SDL_Window** window, SDL_GLContext* gl_context)
 
     *window = SDL_CreateWindow
     (
-        "Peint from temu",
+        "Peint from Temu",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         winWidth, winHeight,
         SDL_WINDOW_OPENGL
@@ -84,6 +90,23 @@ void run_app(SDL_Window* window)
                                 end_point.y = 1.0f - (2.0f * CurrentClick.y) / winHeight;
                                 drawing = false;
                                 draw_line(start_point, end_point, CurrentColor);
+
+                                if (object_count < MAX_OBJECTS) 
+                                {
+                                    objects[object_count].start = start_point;
+                                    objects[object_count].end = end_point;
+                                    objects[object_count].color = CurrentColor;
+                                    object_count++;
+                                    overwrite = 0;
+                                }
+                                else
+                                {
+                                    objects[overwrite].start = start_point;
+                                    objects[overwrite].end = end_point;
+                                    objects[overwrite].color = CurrentColor;
+                                    if (overwrite != MAX_OBJECTS - 1) overwrite++;
+                                    else overwrite = 0;
+                                }
                             }
                         }
                         else
@@ -92,7 +115,22 @@ void run_app(SDL_Window* window)
                         }
                     }
                     break;
+                case SDL_KEYDOWN:
+                    if (event.key.keysym.sym == SDLK_z && SDL_GetModState() & KMOD_CTRL)
+                    {
+                        if (object_count > 0) 
+                        {
+                            object_count--;
+                        }
+                    }
+                    break;
+                
             }
+        }
+
+        for (int i = 0; i < object_count; i++) 
+        {
+            draw_line(objects[i].start, objects[i].end, objects[i].color);
         }
 
         if (drawing && start_point.x != -1 && start_point.y != -1)
