@@ -9,21 +9,17 @@
 
 int main(int argc, char* argv[])
 {
-    int error_code;
-    SDL_Window* window;
-    SDL_GLContext gl_context;
+    SDL_Window* window = NULL;
+    SDL_GLContext gl_context = NULL;
+    SDL_Renderer* renderer = NULL;
 
-    error_code = initialize_app(&window, &gl_context);
-    if (error_code != 0)
+    if (initialize_app(&window, &gl_context, &renderer) == 0) 
     {
-        printf("[ERROR] App initialization failed: %d\n", error_code);
-        return error_code;
+        run_app(window, renderer);
+        cleanup_app(window, gl_context, renderer);
     }
-    run_app(window);
-    cleanup_app(window, gl_context);
 
     return 0;
-
 }
 
 

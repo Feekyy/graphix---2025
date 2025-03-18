@@ -7,10 +7,14 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 #include <GL/gl.h>
+#include <SDL2/SDL_image.h>
 #include <stdbool.h>
 #include <stdio.h>
 
 #define MAX_OBJECTS 5
+
+SDL_Texture* line_icon = NULL;
+SDL_Texture* square_icon = NULL;
 
 ObjList* obj_list;
 int object_count = 0;
@@ -27,7 +31,7 @@ bool drawing = false;
 
 RGBColor CurrentColor = {255, 255, 255};
 
-ShapeType currentShape = SHAPE_LINE;
+ShapeType currentShape = SHAPE_SQUARE;
 
 int initialize_app(SDL_Window** window, SDL_GLContext* gl_context)
 {
@@ -52,6 +56,27 @@ int initialize_app(SDL_Window** window, SDL_GLContext* gl_context)
 
     obj_list = create_obj_list();
 
+    int imgFlags = IMG_INIT_PNG;
+    if (!(IMG_Init(imgFlags) & imgFlags)) {
+        printf("SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError());
+        return -1;
+    }
+
+    *renderer = SDL_CreateRenderer(*window, -1, SDL_RENDERER_ACCELERATED);
+    if (*renderer == NULL) 
+    {
+        printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
+        return -1;
+    }
+
+    line_icon = load_texture("paint_line.png", *renderer);
+    square_icon = load_texture("paint_square.png", *renderer);
+
+    if (image1_texture == NULL || image2_texture == NULL) 
+    {
+        return -1;
+    }
+
     return 0;
 }
 
@@ -63,6 +88,7 @@ void run_app(SDL_Window* window)
     while (need_run) 
     {
         Line temp_line;
+        Square temp_square;
 
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -119,6 +145,40 @@ void run_app(SDL_Window* window)
                                         }
                                     }
                                     break;
+                                case SHAPE_SQUARE:
+                                    temp_square.color = CurrentColor;
+                                    if (!drawing)
+                                    {
+                                        temp_square.top_left.x = click_x;
+                                        temp_square.top_left.y = 1.0f - (2.0f * CurrentClick.y) / winHeight;
+                                        drawing = true;
+                                    }
+                                    else
+                                    {
+                                        end_point.x = click_x;
+                                        end_point.y = 1.0f - (2.0f * CurrentClick.y) / winHeight;
+                                        temp_square.width = end_point.x - temp_square.top_left.x;
+                                        temp_square.height = end_point.y - temp_square.top_left.y;
+                                        drawing = false;
+                                        draw_square(temp_square);
+                                
+                                        if (obj_list->count < MAX_OBJECTS) 
+                                        {
+                                            Shapes new_shape;
+                                            new_shape.square = temp_square;
+                                            add_object(obj_list, new_shape);
+                                            overwrite = 0;
+                                        }
+                                        else
+                                        {
+                                            Shapes new_shape;
+                                            new_shape.square = temp_square;
+                                            switch_shapes(obj_list, new_shape, overwrite);
+                                            if (overwrite != MAX_OBJECTS - 1) overwrite++;
+                                            else overwrite = 0;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         else
@@ -142,11 +202,20 @@ void run_app(SDL_Window* window)
                     {
                         float mouse_x = (2.0f * event.motion.x) / winWidth - 1.0f;
                         float mouse_y = 1.0f - (2.0f * event.motion.y) / winHeight;
-                        temp_line.end.x = mouse_x;
-                        temp_line.end.y = mouse_y;
+                        switch(currentShape)
+                        {
+                            case SHAPE_LINE:
+                                temp_line.end.x = mouse_x;
+                                temp_line.end.y = mouse_y;
+                                break;
+                            case SHAPE_SQUARE:
+                                temp_square.width = mouse_x - temp_square.top_left.x;
+                                temp_square.height = mouse_y - temp_square.top_left.y;
+                                break;
+                        
+                        }
                     }
-                    break;
-                
+                    break;               
             }
         }
 
@@ -157,6 +226,9 @@ void run_app(SDL_Window* window)
             {
                 case SHAPE_LINE:
                     draw_line(currentNode->shape.line);
+                    break;
+                case SHAPE_SQUARE:
+                    draw_square(currentNode->shape.square);
                     break;
             }
             currentNode = currentNode->next;
@@ -169,10 +241,13 @@ void run_app(SDL_Window* window)
                 case SHAPE_LINE:
                     draw_line(temp_line);
                     break;
+                case SHAPE_SQUARE:
+            draw_square(temp_square);
+            break;
             }
         }
 
-        draw_sidebar();
+        draw_sidebar(renderer, line_icon, square_icon);
 
         SDL_GL_SwapWindow(window);
     }
@@ -181,7 +256,11 @@ void run_app(SDL_Window* window)
 
 void cleanup_app(SDL_Window* window, SDL_GLContext gl_context)
 {
+    SDL_DestroyTexture(line_icon);
+    SDL_DestroyTexture(square_icon);
+    SDL_DestroyRenderer(renderer);
     SDL_GL_DeleteContext(gl_context);
     SDL_DestroyWindow(window);
+    IMG_Quit();
     SDL_Quit();
 }

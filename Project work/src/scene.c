@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 #include <GL/gl.h>
+#include <SDL2/SDL_image.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <math.h>
@@ -85,4 +86,42 @@ void draw_sidebar()
         );
     }
     glEnd();
+
+    draw_sidebar_images(renderer, image1_texture, image2_texture);
+}
+
+SDL_Texture* load_texture(const char* path, SDL_Renderer* renderer)
+{
+    SDL_Surface* surface = IMG_Load(path);
+    if (surface == NULL) 
+    {
+        printf("Unable to load image %s! SDL_image Error: %s\n", path, IMG_GetError());
+        return NULL;
+    }
+    
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    if (texture == NULL) 
+    {
+        printf("Unable to create texture from %s! SDL Error: %s\n", path, SDL_GetError());
+    }
+    
+    SDL_FreeSurface(surface);
+    return texture;
+}
+
+void draw_texture(SDL_Texture* texture, SDL_Renderer* renderer, int x, int y, int width, int height)
+{
+    SDL_Rect dest = {x, y, width, height};
+    SDL_RenderCopy(renderer, texture, NULL, &dest);
+}
+
+void draw_sidebar_images(SDL_Renderer* renderer, SDL_Texture* image1, SDL_Texture* image2)
+{
+    int sidebar_width = 0.34f * 800;
+    int image_width = sidebar_width - 20;
+    int image_height = image_width;
+    int y_offset = 400;
+
+    draw_texture(image1, renderer, 10, y_offset, image_width, image_height);
+    draw_texture(image2, renderer, 10, y_offset + image_height + 10, image_width, image_height);
 }
