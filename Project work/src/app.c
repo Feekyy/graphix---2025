@@ -2,6 +2,7 @@
 #include "scene.h"
 #include "addons.h"
 #include "draw.h"
+#include "objlist.h"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
@@ -11,7 +12,7 @@
 
 #define MAX_OBJECTS 5
 
-Line objects[MAX_OBJECTS];
+ObjList* obj_list;
 int object_count = 0;
 int overwrite = 0;
 
@@ -49,6 +50,8 @@ int initialize_app(SDL_Window** window, SDL_GLContext* gl_context)
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    obj_list = objlist_create();
+
     return 0;
 }
 
@@ -78,35 +81,41 @@ void run_app(SDL_Window* window)
 
                         if (click_x > -1.0f + SIDEBAR_WIDTH)
                         {
-                            if (!drawing)
+                            switch (currentShape)
                             {
-                                start_point.x = click_x;
-                                start_point.y = 1.0f - (2.0f * CurrentClick.y) / winHeight;
-                                drawing = true;
-                            }
-                            else
-                            {
-                                end_point.x = click_x;
-                                end_point.y = 1.0f - (2.0f * CurrentClick.y) / winHeight;
-                                drawing = false;
-                                draw_line(start_point, end_point, CurrentColor);
+                                case SHAPE_LINE:
+                                    Line temp_line;
+                                    temp_line.color = CurrentColor;
+                                    if (!drawing)
+                                    {
+                                        start_point.x = click_x;
+                                        start_point.y = 1.0f - (2.0f * CurrentClick.y) / winHeight;
+                                        temp_line.start = start_point;
+                                        drawing = true;
+                                    }
+                                    else
+                                    {
+                                        end_point.x = click_x;
+                                        end_point.y = 1.0f - (2.0f * CurrentClick.y) / winHeight;
+                                        temp_line.end = end_point;
+                                        drawing = false;
+                                        draw_line(temp_line);
 
-                                if (object_count < MAX_OBJECTS) 
-                                {
-                                    objects[object_count].start = start_point;
-                                    objects[object_count].end = end_point;
-                                    objects[object_count].color = CurrentColor;
-                                    object_count++;
-                                    overwrite = 0;
-                                }
-                                else
-                                {
-                                    objects[overwrite].start = start_point;
-                                    objects[overwrite].end = end_point;
-                                    objects[overwrite].color = CurrentColor;
-                                    if (overwrite != MAX_OBJECTS - 1) overwrite++;
-                                    else overwrite = 0;
-                                }
+                                        if (obj_list->count < MAX_OBJECTS) 
+                                        {
+                                            add_object(obj_list, temp_line);
+                                            overwrite = 0;
+                                        }
+                                        else
+                                        {
+                                            objects[overwrite].start = start_point;
+                                            objects[overwrite].end = end_point;
+                                            objects[overwrite].color = CurrentColor;
+                                            if (overwrite != MAX_OBJECTS - 1) overwrite++;
+                                            else overwrite = 0;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         else

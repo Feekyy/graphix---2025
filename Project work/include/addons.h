@@ -3,11 +3,7 @@
 
 typedef enum 
 {
-    SHAPE_POINT,
     SHAPE_LINE,
-    SHAPE_RECTANGLE,
-    SHAPE_CIRCLE,
-    SHAPE_TRIANGLE,
     SHAPE_SQUARE
 } ShapeType;
 
@@ -37,16 +33,10 @@ typedef struct Square
     RGBColor color;
 } Square;
 
-typedef struct ObjectList
+typedef union
 {
-    ShapeType shape_type;
-    union 
-    {
-        Line line;
-        Square square;
-    };
-
-    struct ObjectList* next;
-}
+    Line line;
+    Square square;
+} Shapes;
 
 #endif
