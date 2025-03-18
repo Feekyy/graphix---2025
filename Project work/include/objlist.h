@@ -5,12 +5,11 @@
 
 typedef struct ObjNode ObjNode;
 
-struct ObjNode
+typedef struct ObjNode
 {
-    void* shape;
-
+    Shapes shape;
     ObjNode* next;
-};
+} ObjNode;
 
 typedef struct ObjList
 {
@@ -18,14 +17,14 @@ typedef struct ObjList
     int count;
 } ObjList;
 
-ObjNode* create_obj_node(ShapeType shapeType);
+ObjNode* create_obj_node(Shapes shape);
 
 ObjList* create_obj_list();
 
-void add_object(ObjList* obj_list, ShapeType shapeType);
+void add_object(ObjList* obj_list, Shapes shape);
 
 void delete_last_object(ObjList* obj_list);
 
-void switch_shapes(ObjList* obj_list, ShapeType new_shape, int overwrite);
+void switch_shapes(ObjList* obj_list, Shapes Shape, int overwrite);
 
 #endif

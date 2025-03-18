@@ -50,7 +50,7 @@ int initialize_app(SDL_Window** window, SDL_GLContext* gl_context)
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    obj_list = objlist_create();
+    obj_list = create_obj_list();
 
     return 0;
 }
@@ -62,6 +62,8 @@ void run_app(SDL_Window* window)
     SDL_Event event;
     while (need_run) 
     {
+        Line temp_line;
+
         glClear(GL_COLOR_BUFFER_BIT);
 
         while (SDL_PollEvent(&event)) 
@@ -84,7 +86,6 @@ void run_app(SDL_Window* window)
                             switch (currentShape)
                             {
                                 case SHAPE_LINE:
-                                    Line temp_line;
                                     temp_line.color = CurrentColor;
                                     if (!drawing)
                                     {
@@ -103,14 +104,16 @@ void run_app(SDL_Window* window)
 
                                         if (obj_list->count < MAX_OBJECTS) 
                                         {
-                                            add_object(obj_list, temp_line);
+                                            Shapes new_shape;
+                                            new_shape.line = temp_line;
+                                            add_object(obj_list, new_shape);
                                             overwrite = 0;
                                         }
                                         else
                                         {
-                                            objects[overwrite].start = start_point;
-                                            objects[overwrite].end = end_point;
-                                            objects[overwrite].color = CurrentColor;
+                                            Shapes new_shape;
+                                            new_shape.line = temp_line;
+                                            switch_shapes(obj_list, new_shape, overwrite);
                                             if (overwrite != MAX_OBJECTS - 1) overwrite++;
                                             else overwrite = 0;
                                         }
@@ -127,27 +130,46 @@ void run_app(SDL_Window* window)
                 case SDL_KEYDOWN:
                     if (event.key.keysym.sym == SDLK_z && SDL_GetModState() & KMOD_CTRL)
                     {
-                        if (object_count > 0) 
+                        if (obj_list->count > 0) 
                         {
-                            object_count--;
+                            delete_last_object(obj_list);
                         }
+                    }
+                    break;
+
+                case SDL_MOUSEMOTION:
+                    if (drawing)
+                    {
+                        float mouse_x = (2.0f * event.motion.x) / winWidth - 1.0f;
+                        float mouse_y = 1.0f - (2.0f * event.motion.y) / winHeight;
+                        temp_line.end.x = mouse_x;
+                        temp_line.end.y = mouse_y;
                     }
                     break;
                 
             }
         }
 
-        for (int i = 0; i < object_count; i++) 
+        ObjNode* currentNode = obj_list->head;
+        while (currentNode != NULL)
         {
-            draw_line(objects[i].start, objects[i].end, objects[i].color);
+            switch(currentShape)
+            {
+                case SHAPE_LINE:
+                    draw_line(currentNode->shape.line);
+                    break;
+            }
+            currentNode = currentNode->next;
         }
 
-        if (drawing && start_point.x != -1 && start_point.y != -1)
+        if (drawing)
         {
-            int x, y;
-            SDL_GetMouseState(&x, &y);
-            Point current_point = {x / (float)800 * 2 - 1, 1 - y / (float)600 * 2};
-            draw_line(start_point, current_point, CurrentColor);
+            switch(currentShape)
+            {
+                case SHAPE_LINE:
+                    draw_line(temp_line);
+                    break;
+            }
         }
 
         draw_sidebar();

@@ -4,12 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-ObjNode* create_obj_node(ShapeType shapeType)
+ObjNode* create_obj_node(Shapes shape)
 {
     ObjNode* obj = malloc(sizeof(ObjNode));
-    ShapeType* shape_ptr = malloc(sizeof(ShapeType));
-    *shape_ptr = shapeType;
-    obj->shape = shape_ptr;
+    obj->shape = shape;
     obj->next = NULL;
     return obj;
 }
@@ -23,15 +21,15 @@ ObjList* create_obj_list()
     return obj_list;
 }
 
-void add_object(ObjList* obj_list, ShapeType shapeType)
+void add_object(ObjList* obj_list, Shapes shape)
 {
-    ObjNode* new_node = create_obj_node(shapeType);
+    ObjNode* new_node = create_obj_node(shape);
 
     if (obj_list->head == NULL) 
     {
         obj_list->head = new_node;
     } 
-    else 
+    else
     {
         ObjNode* current = obj_list->head;
         while (current->next != NULL) 
@@ -49,7 +47,6 @@ void delete_last_object(ObjList* obj_list)
 
     if (obj_list->count == 1) 
     {
-        free(obj_list->head->shape);
         free(obj_list->head);
         obj_list->head = NULL;
         obj_list->count = 0;
@@ -61,13 +58,12 @@ void delete_last_object(ObjList* obj_list)
     {
         current = current->next;
     }
-    free(current->next->shape);
     free(current->next);
     current->next = NULL;
     obj_list->count--;
 }
 
-void switch_shapes(ObjList* obj_list, ShapeType new_shape, int overwrite)
+void switch_shapes(ObjList* obj_list, Shapes new_shape, int overwrite)
 {
     if (obj_list == NULL || obj_list->head == NULL || overwrite < 0 || overwrite >= obj_list->count) 
     {
@@ -80,9 +76,6 @@ void switch_shapes(ObjList* obj_list, ShapeType new_shape, int overwrite)
         current = current->next;
     }
 
-    if (current != NULL) 
-    {
-        ShapeType* shape_ptr = (ShapeType*)current->shape;
-        *shape_ptr = new_shape;
-    }
+    current->shape = new_shape;
+    
 }

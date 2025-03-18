@@ -50,11 +50,23 @@ void draw_line(Line line)
         glVertex2f(line.start.x, line.start.y);
         glVertex2f(line.end.x, line.end.y);
     glEnd();
+<<<<<<< Tabnine <<<<<<<
+void draw_square(Square square)//+
+{//+
+    glColor3ub(square.color.red, square.color.green, square.color.blue);//+
+    glBegin(GL_QUADS);//+
+        glVertex2f(square.top_left.x, square.top_left.y);//+
+        glVertex2f(square.top_left.x + square.width, square.top_left.y);//+
+        glVertex2f(square.top_left.x + square.width, square.top_left.y - square.height);//+
+        glVertex2f(square.top_left.x, square.top_left.y - square.height);//+
+    glEnd();//+
+}//+
+>>>>>>> Tabnine >>>>>>>// {"conversationId":"71e48a2e-98e4-4c69-9ad9-8c1b75450cb6","source":"instruct"}
 }
 
-void draw_sqare(Point center, float side_length, RGBColor color)
+void draw_sqare(Square square)
 {
-    glColor3ub(color.blue, color.green, color.red);
+    glColor3ub(square.color.blue, square.color.green, square.color.red);
     glBegin(GL_QUADS);
         glVertex2f(center.x - side_length / 2.0f, center.y - side_length / 2.0f);
         glVertex2f(center.x + side_length / 2.0f, center.y - side_length / 2.0f);
