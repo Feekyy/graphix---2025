@@ -1,64 +1,54 @@
 #include "app.h"
-#include "scene.h"
 #include "addons.h"
 #include "draw.h"
+#include "scene.h"
 #include "objlist.h"
 
+#include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 #include <GL/gl.h>
-#include <SDL2/SDL_image.h>
 #include <stdbool.h>
-#include <stdio.h>
 
 #define MAX_OBJECTS 5
-
-SDL_Texture* line_icon = NULL;
-SDL_Texture* square_icon = NULL;
-
-ObjList* obj_list;
-int object_count = 0;
-int overwrite = 0;
+#define SIDEBAR_WIDTH 0.34f
 
 int winWidth = 800;
 int winHeight = 600;
-const float SIDEBAR_WIDTH = 0.34f;
 
-Point CurrentClick = {-1, -1};
-Point start_point = {-1, -1};
-Point end_point = {-1, -1}; 
-bool drawing = false;
-
-RGBColor CurrentColor = {255, 255, 255};
-
+Point CurrentClick = {0, 0};
+RGBColor CurrentColor = {255, 0, 0};
 ShapeType currentShape = SHAPE_SQUARE;
+bool drawing = false;
+Point start_point, end_point;
 
-int initialize_app(SDL_Window** window, SDL_GLContext* gl_context)
+ObjList* obj_list;
+int overwrite = 0;
+
+int initialize_app(SDL_Window** window, SDL_GLContext* gl_context, SDL_Renderer** renderer)
 {
-    int error_code = SDL_Init(SDL_INIT_EVERYTHING);
-    if (error_code != 0) 
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) 
     {
-        printf("[ERROR] SDL initialization error: %s\n", SDL_GetError());
-        return error_code;
+        printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+        return -1;
     }
 
-    *window = SDL_CreateWindow
-    (
-        "Peint from Temu",
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        winWidth, winHeight,
-        SDL_WINDOW_OPENGL
-    );
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+
+    *window = SDL_CreateWindow("Drawing App", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+    if (*window == NULL) 
+    {
+        printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+        return -1;
+    }
 
     *gl_context = SDL_GL_CreateContext(*window);
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    obj_list = create_obj_list();
-
-    int imgFlags = IMG_INIT_PNG;
-    if (!(IMG_Init(imgFlags) & imgFlags)) {
-        printf("SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError());
+    if (*gl_context == NULL) 
+    {
+        printf("OpenGL context could not be created! SDL Error: %s\n", SDL_GetError());
+        SDL_DestroyWindow(*window);
+        SDL_Quit();
         return -1;
     }
 
@@ -66,23 +56,37 @@ int initialize_app(SDL_Window** window, SDL_GLContext* gl_context)
     if (*renderer == NULL) 
     {
         printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
+        SDL_GL_DeleteContext(*gl_context);
+        SDL_DestroyWindow(*window);
+        SDL_Quit();
         return -1;
     }
 
-    line_icon = load_texture("paint_line.png", *renderer);
-    square_icon = load_texture("paint_square.png", *renderer);
-
-    if (image1_texture == NULL || image2_texture == NULL) 
+    if (SDL_GL_SetSwapInterval(1) < 0)
     {
-        return -1;
+        printf("Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError());
     }
+
+    glViewport(0, 0, 800, 600);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
 
     return 0;
 }
 
-void run_app(SDL_Window* window)
+void run_app(SDL_Window* window, SDL_Renderer* renderer)
 {
+    printf("Entering run_app\n");
+
     bool need_run = true;
+
+    obj_list = create_obj_list();
+    if (obj_list == NULL) 
+    {
+        printf("Failed to create object list\n");
+        return;
+    }
 
     SDL_Event event;
     while (need_run) 
@@ -91,6 +95,10 @@ void run_app(SDL_Window* window)
         Square temp_square;
 
         glClear(GL_COLOR_BUFFER_BIT);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+
+        draw_sidebar(window, renderer);
 
         while (SDL_PollEvent(&event)) 
         {
@@ -212,7 +220,6 @@ void run_app(SDL_Window* window)
                                 temp_square.width = mouse_x - temp_square.top_left.x;
                                 temp_square.height = mouse_y - temp_square.top_left.y;
                                 break;
-                        
                         }
                     }
                     break;               
@@ -242,25 +249,19 @@ void run_app(SDL_Window* window)
                     draw_line(temp_line);
                     break;
                 case SHAPE_SQUARE:
-            draw_square(temp_square);
-            break;
+                    draw_square(temp_square);
+                    break;
             }
         }
-
-        draw_sidebar(renderer, line_icon, square_icon);
-
+        
         SDL_GL_SwapWindow(window);
     }
 }
 
-
-void cleanup_app(SDL_Window* window, SDL_GLContext gl_context)
+void cleanup_app(SDL_Window* window, SDL_GLContext gl_context, SDL_Renderer* renderer)
 {
-    SDL_DestroyTexture(line_icon);
-    SDL_DestroyTexture(square_icon);
     SDL_DestroyRenderer(renderer);
     SDL_GL_DeleteContext(gl_context);
     SDL_DestroyWindow(window);
-    IMG_Quit();
     SDL_Quit();
 }

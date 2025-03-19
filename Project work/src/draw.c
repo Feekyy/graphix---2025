@@ -45,31 +45,20 @@ RGBColor handle_color_wheel_click(Point click, int window_width, int window_heig
 
 void draw_line(Line line)
 {
-    glColor3ub(line.color.blue, line.color.green, line.color.red);
     glBegin(GL_LINES);
-        glVertex2f(line.start.x, line.start.y);
-        glVertex2f(line.end.x, line.end.y);
+    glColor3ub(line.color.red, line.color.green, line.color.blue);
+    glVertex2f(line.start.x, line.start.y);
+    glVertex2f(line.end.x, line.end.y);
     glEnd();
 }
 
 void draw_square(Square square)
 {
-    glColor3ub(square.color.red, square.color.green, square.color.blue);
-    
-    float x1 = square.top_left.x;
-    float y1 = square.top_left.y;
-    float x2 = x1 + square.width;
-    float y2 = y1 + square.height;
-
-    float left = fmin(x1, x2);
-    float right = fmax(x1, x2);
-    float top = fmax(y1, y2);
-    float bottom = fmin(y1, y2);
-
     glBegin(GL_QUADS);
-        glVertex2f(left, top);
-        glVertex2f(right, top);
-        glVertex2f(right, bottom);
-        glVertex2f(left, bottom);
+    glColor3ub(square.color.red, square.color.green, square.color.blue);
+    glVertex2f(square.top_left.x, square.top_left.y);
+    glVertex2f(square.top_left.x + square.width, square.top_left.y);
+    glVertex2f(square.top_left.x + square.width, square.top_left.y + square.height);
+    glVertex2f(square.top_left.x, square.top_left.y + square.height);
     glEnd();
 }
