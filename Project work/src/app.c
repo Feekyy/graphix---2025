@@ -8,9 +8,11 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 #include <GL/gl.h>
+#include <SDL2/SDL_image.h>
 #include <stdbool.h>
 
 #define MAX_OBJECTS 5
+#define NUM_ICONS 2
 #define SIDEBAR_WIDTH 0.34f
 
 int winWidth = 800;
@@ -24,6 +26,8 @@ Point start_point, end_point;
 
 ObjList* obj_list;
 int overwrite = 0;
+
+Icon icons[NUM_ICONS];
 
 int initialize_app(SDL_Window** window, SDL_GLContext* gl_context, SDL_Renderer** renderer)
 {
@@ -80,6 +84,8 @@ void run_app(SDL_Window* window, SDL_Renderer* renderer)
     printf("Entering run_app\n");
 
     bool need_run = true;
+    Line temp_line;
+    Square temp_square;
 
     obj_list = create_obj_list();
     if (obj_list == NULL) 
@@ -91,18 +97,15 @@ void run_app(SDL_Window* window, SDL_Renderer* renderer)
     SDL_Event event;
     while (need_run) 
     {
-        Line temp_line;
-        Square temp_square;
-
-        glClear(GL_COLOR_BUFFER_BIT);
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         SDL_RenderClear(renderer);
 
         draw_sidebar(window, renderer);
+        load_icons(renderer, icons, NUM_ICONS);
 
-        while (SDL_PollEvent(&event)) 
+        while (SDL_PollEvent(&event))
         {
-            switch (event.type) 
+            switch (event.type)
             {
                 case SDL_QUIT:
                     need_run = false;
@@ -114,8 +117,22 @@ void run_app(SDL_Window* window, SDL_Renderer* renderer)
                         CurrentClick.y = event.button.y;
 
                         float click_x = (2.0f * CurrentClick.x) / winWidth - 1.0f;
+                        float click_y = 1.0f - (2.0f * CurrentClick.y) / winHeight;
 
-                        if (click_x > -1.0f + SIDEBAR_WIDTH)
+                        bool icon_clicked = false;
+                        for (int i = 0; i < NUM_ICONS; i++)
+                        {
+                            if (CurrentClick.x >= icons[i].rect.x && CurrentClick.x < icons[i].rect.x + icons[i].rect.w &&
+                                CurrentClick.y >= icons[i].rect.y && CurrentClick.y < icons[i].rect.y + icons[i].rect.h)
+                            {
+                                currentShape = icons[i].shape;
+                                icon_clicked = true;
+                                printf("Switched to shape: %d\n", currentShape);
+                                break;
+                            }
+                        }
+
+                        if (!icon_clicked && click_x > -1.0f + SIDEBAR_WIDTH)
                         {
                             switch (currentShape)
                             {
@@ -169,7 +186,7 @@ void run_app(SDL_Window* window, SDL_Renderer* renderer)
                                         temp_square.height = end_point.y - temp_square.top_left.y;
                                         drawing = false;
                                         draw_square(temp_square);
-                                
+
                                         if (obj_list->count < MAX_OBJECTS) 
                                         {
                                             Shapes new_shape;
@@ -189,9 +206,20 @@ void run_app(SDL_Window* window, SDL_Renderer* renderer)
                                     break;
                             }
                         }
-                        else
+                        else if (!icon_clicked)
                         {
-                            CurrentColor = handle_color_wheel_click(CurrentClick, winWidth, winHeight);
+                            float wheel_center_x = (-1.0f + SIDEBAR_WIDTH / 2) * winWidth / 2 + winWidth / 2;
+                            float wheel_center_y = winHeight / 2 - winHeight / 2 * 0.8f;
+                            float wheel_radius = SIDEBAR_WIDTH * winWidth / 4;
+                
+                            float dx = CurrentClick.x - wheel_center_x;
+                            float dy = CurrentClick.y - wheel_center_y;
+                            float distance = sqrt(dx*dx + dy*dy);
+                
+                            if (distance <= wheel_radius)
+                            {
+                                CurrentColor = handle_color_wheel_click(CurrentClick, winWidth, winHeight);
+                            }
                         }
                     }
                     break;
@@ -253,13 +281,20 @@ void run_app(SDL_Window* window, SDL_Renderer* renderer)
                     break;
             }
         }
-        
+
         SDL_GL_SwapWindow(window);
     }
 }
 
 void cleanup_app(SDL_Window* window, SDL_GLContext gl_context, SDL_Renderer* renderer)
 {
+    for (int i = 0; i < NUM_ICONS; i++)
+    {
+        if (icons[i].texture != NULL)
+        {
+            SDL_DestroyTexture(icons[i].texture);
+        }
+    }
     SDL_DestroyRenderer(renderer);
     SDL_GL_DeleteContext(gl_context);
     SDL_DestroyWindow(window);

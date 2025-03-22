@@ -1,11 +1,21 @@
 #ifndef ADDONS_H
 #define ADDONS_H
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+
 typedef enum 
 {
     SHAPE_LINE,
     SHAPE_SQUARE
 } ShapeType;
+
+typedef struct
+{
+    SDL_Texture* texture;
+    SDL_Rect rect;
+    ShapeType shape;
+} Icon;
 
 typedef struct RGBColor 
 {

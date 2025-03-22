@@ -3,7 +3,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
-#include <SDL_image.h>
+#include <SDL2/SDL_image.h>
 #include <GL/gl.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -100,4 +100,38 @@ void draw_sidebar(SDL_Window* window, SDL_Renderer* renderer)
     glEnd();
 
     glFlush();
+}
+
+SDL_Texture* load_texture(SDL_Renderer* renderer, const char* file_path)
+{
+    SDL_Surface* surface = IMG_Load(file_path);
+    if (surface == NULL) 
+    {
+        printf("Error loading texture: %s\n", IMG_GetError());
+        return NULL;
+    }
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    return texture;
+}
+
+void load_icons(SDL_Renderer* renderer, Icon icons[], int NUM_ICONS)
+{
+    const char* icon_files[] = {"assets/paint_line.png", "assets/paint_square.png"};
+    ShapeType shapes[] = {SHAPE_LINE, SHAPE_SQUARE};
+
+    for (int i = 0; i < NUM_ICONS; i++)
+    {
+        icons[i].texture = load_texture(renderer, icon_files[i]);
+        icons[i].rect.x = 10;
+        icons[i].rect.y = 300 + i * 110;
+        icons[i].rect.w = 100;
+        icons[i].rect.h = 100;
+        icons[i].shape = shapes[i];
+
+        if (icons[i].texture == NULL)
+        {
+            printf("Failed to load texture: %s\n", SDL_GetError());
+        }
+    }
 }
