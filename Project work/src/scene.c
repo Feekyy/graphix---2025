@@ -117,7 +117,7 @@ SDL_Texture* load_texture(SDL_Renderer* renderer, const char* file_path)
 
 void load_icons(SDL_Renderer* renderer, Icon icons[], int NUM_ICONS)
 {
-    const char* icon_files[] = {"assets/paint_line.png", "assets/paint_square.png"};
+    const char* icon_files[] = {"assets/line.png", "assets/paint_square.png"};
     ShapeType shapes[] = {SHAPE_LINE, SHAPE_SQUARE};
 
     for (int i = 0; i < NUM_ICONS; i++)

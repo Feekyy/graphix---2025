@@ -94,14 +94,22 @@ void run_app(SDL_Window* window, SDL_Renderer* renderer)
         return;
     }
 
+    load_icons(renderer, icons, NUM_ICONS);
+
     SDL_Event event;
     while (need_run) 
     {
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         SDL_RenderClear(renderer);
 
+        for (int i = 0; i < NUM_ICONS; i++)
+        {
+            SDL_RenderCopy(renderer, icons[i].texture, NULL, &icons[i].rect);
+        }
+
         draw_sidebar(window, renderer);
-        load_icons(renderer, icons, NUM_ICONS);
+
+        draw_sidebar(window, renderer);
 
         while (SDL_PollEvent(&event))
         {
