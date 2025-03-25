@@ -10,7 +10,7 @@ typedef enum
     SHAPE_SQUARE
 } ShapeType;
 
-typedef struct
+typedef struct Icon
 {
     SDL_Texture* texture;
     SDL_Rect rect;

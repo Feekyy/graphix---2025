@@ -110,14 +110,24 @@ SDL_Texture* load_texture(SDL_Renderer* renderer, const char* file_path)
         printf("Error loading texture: %s\n", IMG_GetError());
         return NULL;
     }
+
+    SDL_PixelFormat* format = surface->format;
+    Uint32* pixels = (Uint32*)surface->pixels;
+    Uint32 pixel = pixels[0];
+    Uint8 r, g, b, s;
+    SDL_GetRGBA(pixel, format, &r, &g, &b, &s);
+
+    printf("Loaded texture. First pixel RGB: (%d, %d, %d, %d)\n", r, g, b, s);
+
     SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_FreeSurface(surface);
+
     return texture;
 }
 
 void load_icons(SDL_Renderer* renderer, Icon icons[], int NUM_ICONS)
 {
-    const char* icon_files[] = {"assets/line.png", "assets/paint_square.png"};
+    const char* icon_files[] = {"assets/paint_line.jpg", "assets/paint_square.jpg"};
     ShapeType shapes[] = {SHAPE_LINE, SHAPE_SQUARE};
 
     for (int i = 0; i < NUM_ICONS; i++)

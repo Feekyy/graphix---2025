@@ -100,16 +100,16 @@ void run_app(SDL_Window* window, SDL_Renderer* renderer)
     while (need_run) 
     {
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        SDL_RenderClear(renderer);
-
         for (int i = 0; i < NUM_ICONS; i++)
         {
+            //SDL_RenderClear(renderer);
             SDL_RenderCopy(renderer, icons[i].texture, NULL, &icons[i].rect);
+            SDL_RenderPresent(renderer);
         }
 
+        //SDL_RenderClear(renderer);
         draw_sidebar(window, renderer);
-
-        draw_sidebar(window, renderer);
+        //SDL_RenderPresent(renderer);
 
         while (SDL_PollEvent(&event))
         {
