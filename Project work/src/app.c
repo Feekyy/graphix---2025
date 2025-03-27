@@ -99,18 +99,6 @@ void run_app(SDL_Window* window, SDL_Renderer* renderer)
     SDL_Event event;
     while (need_run) 
     {
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        for (int i = 0; i < NUM_ICONS; i++)
-        {
-            //SDL_RenderClear(renderer);
-            SDL_RenderCopy(renderer, icons[i].texture, NULL, &icons[i].rect);
-            SDL_RenderPresent(renderer);
-        }
-
-        //SDL_RenderClear(renderer);
-        draw_sidebar(window, renderer);
-        //SDL_RenderPresent(renderer);
-
         while (SDL_PollEvent(&event))
         {
             switch (event.type)
@@ -262,6 +250,16 @@ void run_app(SDL_Window* window, SDL_Renderer* renderer)
             }
         }
 
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+        SDL_RenderClear(renderer);
+
+        draw_sidebar(renderer, winWidth, winHeight);
+
+        for (int i = 0; i < NUM_ICONS; i++)
+        {
+            SDL_RenderCopy(renderer, icons[i].texture, NULL, &icons[i].rect);
+        }
+
         ObjNode* currentNode = obj_list->head;
         while (currentNode != NULL)
         {
@@ -290,7 +288,10 @@ void run_app(SDL_Window* window, SDL_Renderer* renderer)
             }
         }
 
+        SDL_RenderPresent(renderer);
+
         SDL_GL_SwapWindow(window);
+        //SDL_Delay(16);
     }
 }
 

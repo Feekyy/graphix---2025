@@ -51,55 +51,44 @@ void draw_color_wheel(float h, float s, float v, float* r, float* g, float* b)
     hsv_to_rgb(h, s, v, r, g, b);
 }
 
-void draw_sidebar(SDL_Window* window, SDL_Renderer* renderer)
+void draw_sidebar(SDL_Renderer* renderer, int window_width, int window_height)
 {
-    int window_width, window_height;
-    SDL_GetWindowSize(window, &window_width, &window_height);
+    int sidebar_width = (int)(0.2f * window_width);
+    float wheel_radius = 0.1f * window_width;
+    float wheel_center_x = sidebar_width / 2;
+    float wheel_center_y = wheel_radius + 0.05f * window_height;
 
-    float sidebar_width = 0.34f;
-    float wheel_radius = 0.15f;
-    float wheel_center_x = -1.0f + wheel_radius + 0.02f;
-    float wheel_center_y = 1.0f - wheel_radius - 0.02f;
-    int segments = 360;
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_Rect sidebar_rect = {0, 0, sidebar_width, window_height};
+    SDL_RenderFillRect(renderer, &sidebar_rect);
 
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
+    SDL_RenderDrawLine(renderer, sidebar_width, 0, sidebar_width, window_height);
 
-    glViewport(0, 0, window_width, window_height);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glBegin(GL_QUADS);
-        glVertex2f(-1.0f, 1.0f);
-        glVertex2f(-1.0f + sidebar_width, 1.0f);
-        glVertex2f(-1.0f + sidebar_width, -1.0f);
-        glVertex2f(-1.0f, -1.0f);
-    glEnd();
-
-    glBegin(GL_TRIANGLE_FAN);
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glVertex2f(wheel_center_x, wheel_center_y);
-    
-    for(int i = 0; i <= segments; i++) 
+    for(int y = (int)(wheel_center_y - wheel_radius); y <= wheel_center_y + wheel_radius; y++)
     {
-        float angle = 2.0f * M_PI * i / segments;
-        float hue = 360.0f * i / segments;
-        float r, g, b;
-        hsv_to_rgb(hue, 1.0f, 1.0f, &r, &g, &b);
-        
-        glColor3f(r, g, b);
-        glVertex2f(
-            wheel_center_x + wheel_radius * cosf(angle),
-            wheel_center_y + wheel_radius * sinf(angle)
-        );
+        for(int x = (int)(wheel_center_x - wheel_radius); x <= wheel_center_x + wheel_radius; x++)
+        {
+            float dx = x - wheel_center_x;
+            float dy = y - wheel_center_y;
+            float distance = sqrt(dx*dx + dy*dy);
+            
+            if(distance <= wheel_radius)
+            {
+                float angle = atan2(dy, dx);
+                if(angle < 0) angle += 2 * M_PI;
+                
+                float hue = angle / (2 * M_PI) * 360.0f;
+                float saturation = distance / wheel_radius;
+                
+                float r, g, b;
+                hsv_to_rgb(hue, saturation, 1.0f, &r, &g, &b);
+                
+                SDL_SetRenderDrawColor(renderer, (Uint8)(r * 255), (Uint8)(g * 255), (Uint8)(b * 255), 255);
+                SDL_RenderDrawPoint(renderer, x, y);
+            }
+        }
     }
-    glEnd();
-
-    glFlush();
 }
 
 SDL_Texture* load_texture(SDL_Renderer* renderer, const char* file_path)
@@ -133,7 +122,7 @@ void load_icons(SDL_Renderer* renderer, Icon icons[], int NUM_ICONS)
     for (int i = 0; i < NUM_ICONS; i++)
     {
         icons[i].texture = load_texture(renderer, icon_files[i]);
-        icons[i].rect.x = 10;
+        icons[i].rect.x = 30;
         icons[i].rect.y = 300 + i * 110;
         icons[i].rect.w = 100;
         icons[i].rect.h = 100;
