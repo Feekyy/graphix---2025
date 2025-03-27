@@ -43,22 +43,23 @@ RGBColor handle_color_wheel_click(Point click, int window_width, int window_heig
     return selected_color;
 }
 
-void draw_line(Line line)
+void draw_line(SDL_Renderer* renderer, Line line, int winWidth, int winHeight)
 {
-    glBegin(GL_LINES);
-    glColor3ub(line.color.red, line.color.green, line.color.blue);
-    glVertex2f(line.start.x, line.start.y);
-    glVertex2f(line.end.x, line.end.y);
-    glEnd();
+    SDL_SetRenderDrawColor(renderer, line.color.red, line.color.green, line.color.blue, 255);
+    int x1 = (line.start.x + 1) * winWidth / 2;
+    int y1 = (1 - line.start.y) * winHeight / 2;
+    int x2 = (line.end.x + 1) * winWidth / 2;
+    int y2 = (1 - line.end.y) * winHeight / 2;
+    SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
 }
 
-void draw_square(Square square)
+void draw_square(SDL_Renderer* renderer, Square square, int winWidth, int winHeight)
 {
-    glBegin(GL_QUADS);
-    glColor3ub(square.color.red, square.color.green, square.color.blue);
-    glVertex2f(square.top_left.x, square.top_left.y);
-    glVertex2f(square.top_left.x + square.width, square.top_left.y);
-    glVertex2f(square.top_left.x + square.width, square.top_left.y + square.height);
-    glVertex2f(square.top_left.x, square.top_left.y + square.height);
-    glEnd();
+    SDL_SetRenderDrawColor(renderer, square.color.red, square.color.green, square.color.blue, 255);
+    int x = (square.top_left.x + 1) * winWidth / 2;
+    int y = (1 - square.top_left.y) * winHeight / 2;
+    int w = square.width * winWidth / 2;
+    int h = -square.height * winHeight / 2;
+    SDL_Rect rect = {x, y, w, h};
+    SDL_RenderFillRect(renderer, &rect);
 }

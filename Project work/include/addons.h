@@ -43,7 +43,7 @@ typedef struct Square
     RGBColor color;
 } Square;
 
-typedef union
+typedef union Shapes
 {
     Line line;
     Square square;

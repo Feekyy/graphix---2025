@@ -147,20 +147,20 @@ void run_app(SDL_Window* window, SDL_Renderer* renderer)
                                         end_point.y = 1.0f - (2.0f * CurrentClick.y) / winHeight;
                                         temp_line.end = end_point;
                                         drawing = false;
-                                        draw_line(temp_line);
+                                        draw_line(renderer, temp_line, winWidth, winHeight);
 
                                         if (obj_list->count < MAX_OBJECTS) 
                                         {
                                             Shapes new_shape;
                                             new_shape.line = temp_line;
-                                            add_object(obj_list, new_shape);
+                                            add_object(obj_list, new_shape, currentShape);
                                             overwrite = 0;
                                         }
                                         else
                                         {
                                             Shapes new_shape;
                                             new_shape.line = temp_line;
-                                            switch_shapes(obj_list, new_shape, overwrite);
+                                            switch_shapes(obj_list, new_shape, currentShape, overwrite);
                                             if (overwrite != MAX_OBJECTS - 1) overwrite++;
                                             else overwrite = 0;
                                         }
@@ -181,20 +181,20 @@ void run_app(SDL_Window* window, SDL_Renderer* renderer)
                                         temp_square.width = end_point.x - temp_square.top_left.x;
                                         temp_square.height = end_point.y - temp_square.top_left.y;
                                         drawing = false;
-                                        draw_square(temp_square);
+                                        draw_square(renderer, temp_square, winWidth, winHeight);
 
                                         if (obj_list->count < MAX_OBJECTS) 
                                         {
                                             Shapes new_shape;
                                             new_shape.square = temp_square;
-                                            add_object(obj_list, new_shape);
+                                            add_object(obj_list, new_shape, currentShape);
                                             overwrite = 0;
                                         }
                                         else
                                         {
                                             Shapes new_shape;
                                             new_shape.square = temp_square;
-                                            switch_shapes(obj_list, new_shape, overwrite);
+                                            switch_shapes(obj_list, new_shape, currentShape, overwrite);
                                             if (overwrite != MAX_OBJECTS - 1) overwrite++;
                                             else overwrite = 0;
                                         }
@@ -250,11 +250,10 @@ void run_app(SDL_Window* window, SDL_Renderer* renderer)
             }
         }
 
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
         draw_sidebar(renderer, winWidth, winHeight);
-
         for (int i = 0; i < NUM_ICONS; i++)
         {
             SDL_RenderCopy(renderer, icons[i].texture, NULL, &icons[i].rect);
@@ -263,13 +262,13 @@ void run_app(SDL_Window* window, SDL_Renderer* renderer)
         ObjNode* currentNode = obj_list->head;
         while (currentNode != NULL)
         {
-            switch(currentShape)
+            switch(currentNode->shapeType)
             {
                 case SHAPE_LINE:
-                    draw_line(currentNode->shape.line);
+                    draw_line(renderer, currentNode->shape.line, winWidth, winHeight);
                     break;
                 case SHAPE_SQUARE:
-                    draw_square(currentNode->shape.square);
+                    draw_square(renderer, currentNode->shape.square, winWidth, winHeight);
                     break;
             }
             currentNode = currentNode->next;
@@ -280,17 +279,16 @@ void run_app(SDL_Window* window, SDL_Renderer* renderer)
             switch(currentShape)
             {
                 case SHAPE_LINE:
-                    draw_line(temp_line);
+                    draw_line(renderer, temp_line, winWidth, winHeight);
                     break;
                 case SHAPE_SQUARE:
-                    draw_square(temp_square);
+                    draw_square(renderer, temp_square, winWidth, winHeight);
                     break;
             }
         }
 
         SDL_RenderPresent(renderer);
 
-        SDL_GL_SwapWindow(window);
         //SDL_Delay(16);
     }
 }
