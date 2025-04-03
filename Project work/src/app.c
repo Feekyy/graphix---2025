@@ -1,309 +1,228 @@
 #include "app.h"
-#include "addons.h"
-#include "draw.h"
-#include "scene.h"
-#include "objlist.h"
 
-#include <stdio.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
-#include <GL/gl.h>
 #include <SDL2/SDL_image.h>
-#include <stdbool.h>
 
-#define MAX_OBJECTS 5
-#define NUM_ICONS 2
-#define SIDEBAR_WIDTH 0.34f
-
-int winWidth = 800;
-int winHeight = 600;
-
-Point CurrentClick = {0, 0};
-RGBColor CurrentColor = {255, 0, 0};
-ShapeType currentShape = SHAPE_SQUARE;
-bool drawing = false;
-Point start_point, end_point;
-
-ObjList* obj_list;
-int overwrite = 0;
-
-Icon icons[NUM_ICONS];
-
-int initialize_app(SDL_Window** window, SDL_GLContext* gl_context, SDL_Renderer** renderer)
+void init_app(App* app, int width, int height)
 {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) 
-    {
-        printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
-        return -1;
-    }
+    int error_code;
+    int inited_loaders;
 
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    app->is_running = false;
 
-    *window = SDL_CreateWindow("Drawing App", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
-    if (*window == NULL) 
-    {
-        printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
-        return -1;
-    }
-
-    *gl_context = SDL_GL_CreateContext(*window);
-    if (*gl_context == NULL) 
-    {
-        printf("OpenGL context could not be created! SDL Error: %s\n", SDL_GetError());
-        SDL_DestroyWindow(*window);
-        SDL_Quit();
-        return -1;
-    }
-
-    *renderer = SDL_CreateRenderer(*window, -1, SDL_RENDERER_ACCELERATED);
-    if (*renderer == NULL) 
-    {
-        printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
-        SDL_GL_DeleteContext(*gl_context);
-        SDL_DestroyWindow(*window);
-        SDL_Quit();
-        return -1;
-    }
-
-    if (SDL_GL_SetSwapInterval(1) < 0)
-    {
-        printf("Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError());
-    }
-
-    glViewport(0, 0, 800, 600);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
-
-    return 0;
-}
-
-void run_app(SDL_Window* window, SDL_Renderer* renderer)
-{
-    printf("Entering run_app\n");
-
-    bool need_run = true;
-    Line temp_line;
-    Square temp_square;
-
-    obj_list = create_obj_list();
-    if (obj_list == NULL) 
-    {
-        printf("Failed to create object list\n");
+    error_code = SDL_Init(SDL_INIT_EVERYTHING);
+    if (error_code != 0) {
+        printf("[ERROR] SDL initialization error: %s\n", SDL_GetError());
         return;
     }
 
-    load_icons(renderer, icons, NUM_ICONS);
-
-    SDL_Event event;
-    while (need_run) 
+    app->window = SDL_CreateWindow
+    (
+        "Paint from temu!",
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        width, height,
+        SDL_WINDOW_OPENGL
+    );
+    if (app->window == NULL) 
     {
-        while (SDL_PollEvent(&event))
+        printf("[ERROR] Unable to create the application window!\n");
+        return;
+    }
+
+    inited_loaders = IMG_Init(IMG_INIT_PNG);
+    if (inited_loaders == 0) 
+    {
+        printf("[ERROR] IMG initialization error: %s\n", IMG_GetError());
+        return;
+    }
+
+    app->gl_context = SDL_GL_CreateContext(app->window);
+    if (app->gl_context == NULL) 
+    {
+        printf("[ERROR] Unable to create the OpenGL context!\n");
+        return;
+    }
+
+    init_opengl();
+    reshape(width, height);
+
+    init_camera(&(app->camera));
+    init_scene(&(app->scene));
+
+    app->is_running = true;
+}
+
+void init_opengl()
+{
+    glShadeModel(GL_SMOOTH);
+
+    glEnable(GL_NORMALIZE);
+    glEnable(GL_AUTO_NORMAL);
+
+    glClearColor(0.1, 0.1, 0.1, 1.0);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    glEnable(GL_DEPTH_TEST);
+
+    glClearDepth(1.0);
+
+    glEnable(GL_TEXTURE_2D);
+
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+}
+
+void reshape(GLsizei width, GLsizei height)
+{
+    int x, y, w, h;
+    double ratio;
+
+    ratio = (double)width / height;
+    if (ratio > VIEWPORT_RATIO) 
+    {
+        w = (int)((double)height * VIEWPORT_RATIO);
+        h = height;
+        x = (width - w) / 2;
+        y = 0;
+    }
+    else {
+        w = width;
+        h = (int)((double)width / VIEWPORT_RATIO);
+        x = 0;
+        y = (height - h) / 2;
+    }
+
+    glViewport(x, y, w, h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glFrustum(
+        -.08, .08,
+        -.06, .06,
+        .1, 10
+    );
+}
+
+void handle_app_events(App* app)
+{
+    SDL_Event event;
+    static bool is_right_mouse_down = false;
+    static int mouse_x = 0;
+    static int mouse_y = 0;
+    int x;
+    int y;
+
+    while (SDL_PollEvent(&event)) 
+    {
+        switch (event.type) 
         {
-            switch (event.type)
+        case SDL_KEYDOWN:
+            switch (event.key.keysym.scancode) 
             {
-                case SDL_QUIT:
-                    need_run = false;
-                    break;
-                case SDL_MOUSEBUTTONDOWN:
-                    if (event.button.button == SDL_BUTTON_LEFT)
-                    {
-                        CurrentClick.x = event.button.x;
-                        CurrentClick.y = event.button.y;
-
-                        float click_x = (2.0f * CurrentClick.x) / winWidth - 1.0f;
-                        float click_y = 1.0f - (2.0f * CurrentClick.y) / winHeight;
-
-                        bool icon_clicked = false;
-                        for (int i = 0; i < NUM_ICONS; i++)
-                        {
-                            if (CurrentClick.x >= icons[i].rect.x && CurrentClick.x < icons[i].rect.x + icons[i].rect.w &&
-                                CurrentClick.y >= icons[i].rect.y && CurrentClick.y < icons[i].rect.y + icons[i].rect.h)
-                            {
-                                currentShape = icons[i].shape;
-                                icon_clicked = true;
-                                printf("Switched to shape: %d\n", currentShape);
-                                break;
-                            }
-                        }
-
-                        if (!icon_clicked && click_x > -1.0f + SIDEBAR_WIDTH)
-                        {
-                            switch (currentShape)
-                            {
-                                case SHAPE_LINE:
-                                    temp_line.color = CurrentColor;
-                                    if (!drawing)
-                                    {
-                                        start_point.x = click_x;
-                                        start_point.y = 1.0f - (2.0f * CurrentClick.y) / winHeight;
-                                        temp_line.start = start_point;
-                                        drawing = true;
-                                    }
-                                    else
-                                    {
-                                        end_point.x = click_x;
-                                        end_point.y = 1.0f - (2.0f * CurrentClick.y) / winHeight;
-                                        temp_line.end = end_point;
-                                        drawing = false;
-                                        draw_line(renderer, temp_line, winWidth, winHeight);
-
-                                        if (obj_list->count < MAX_OBJECTS) 
-                                        {
-                                            Shapes new_shape;
-                                            new_shape.line = temp_line;
-                                            add_object(obj_list, new_shape, currentShape);
-                                            overwrite = 0;
-                                        }
-                                        else
-                                        {
-                                            Shapes new_shape;
-                                            new_shape.line = temp_line;
-                                            switch_shapes(obj_list, new_shape, currentShape, overwrite);
-                                            if (overwrite != MAX_OBJECTS - 1) overwrite++;
-                                            else overwrite = 0;
-                                        }
-                                    }
-                                    break;
-                                case SHAPE_SQUARE:
-                                    temp_square.color = CurrentColor;
-                                    if (!drawing)
-                                    {
-                                        temp_square.top_left.x = click_x;
-                                        temp_square.top_left.y = 1.0f - (2.0f * CurrentClick.y) / winHeight;
-                                        drawing = true;
-                                    }
-                                    else
-                                    {
-                                        end_point.x = click_x;
-                                        end_point.y = 1.0f - (2.0f * CurrentClick.y) / winHeight;
-                                        temp_square.width = end_point.x - temp_square.top_left.x;
-                                        temp_square.height = end_point.y - temp_square.top_left.y;
-                                        drawing = false;
-                                        draw_square(renderer, temp_square, winWidth, winHeight);
-
-                                        if (obj_list->count < MAX_OBJECTS) 
-                                        {
-                                            Shapes new_shape;
-                                            new_shape.square = temp_square;
-                                            add_object(obj_list, new_shape, currentShape);
-                                            overwrite = 0;
-                                        }
-                                        else
-                                        {
-                                            Shapes new_shape;
-                                            new_shape.square = temp_square;
-                                            switch_shapes(obj_list, new_shape, currentShape, overwrite);
-                                            if (overwrite != MAX_OBJECTS - 1) overwrite++;
-                                            else overwrite = 0;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        else if (!icon_clicked)
-                        {
-                            float wheel_center_x = (-1.0f + SIDEBAR_WIDTH / 2) * winWidth / 2 + winWidth / 2;
-                            float wheel_center_y = winHeight / 2 - winHeight / 2 * 0.8f;
-                            float wheel_radius = SIDEBAR_WIDTH * winWidth / 4;
-                
-                            float dx = CurrentClick.x - wheel_center_x;
-                            float dy = CurrentClick.y - wheel_center_y;
-                            float distance = sqrt(dx*dx + dy*dy);
-                
-                            if (distance <= wheel_radius)
-                            {
-                                CurrentColor = handle_color_wheel_click(CurrentClick, winWidth, winHeight);
-                            }
-                        }
-                    }
-                    break;
-                case SDL_KEYDOWN:
-                    if (event.key.keysym.sym == SDLK_z && SDL_GetModState() & KMOD_CTRL)
-                    {
-                        if (obj_list->count > 0) 
-                        {
-                            delete_last_object(obj_list);
-                        }
-                    }
-                    break;
-
-                case SDL_MOUSEMOTION:
-                    if (drawing)
-                    {
-                        float mouse_x = (2.0f * event.motion.x) / winWidth - 1.0f;
-                        float mouse_y = 1.0f - (2.0f * event.motion.y) / winHeight;
-                        switch(currentShape)
-                        {
-                            case SHAPE_LINE:
-                                temp_line.end.x = mouse_x;
-                                temp_line.end.y = mouse_y;
-                                break;
-                            case SHAPE_SQUARE:
-                                temp_square.width = mouse_x - temp_square.top_left.x;
-                                temp_square.height = mouse_y - temp_square.top_left.y;
-                                break;
-                        }
-                    }
-                    break;               
+            case SDL_SCANCODE_ESCAPE:
+                app->is_running = false;
+                break;
+            case SDL_SCANCODE_W:
+                set_camera_speed(&(app->camera), 1);
+                break;
+            case SDL_SCANCODE_S:
+                set_camera_speed(&(app->camera), -1);
+                break;
+            case SDL_SCANCODE_A:
+                set_camera_side_speed(&(app->camera), 1);
+                break;
+            case SDL_SCANCODE_D:
+                set_camera_side_speed(&(app->camera), -1);
+                break;
+            default:
+                break;
             }
-        }
-
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-        SDL_RenderClear(renderer);
-
-        draw_sidebar(renderer, winWidth, winHeight);
-        for (int i = 0; i < NUM_ICONS; i++)
-        {
-            SDL_RenderCopy(renderer, icons[i].texture, NULL, &icons[i].rect);
-        }
-
-        ObjNode* currentNode = obj_list->head;
-        while (currentNode != NULL)
-        {
-            switch(currentNode->shapeType)
+            break;
+        case SDL_KEYUP:
+            switch (event.key.keysym.scancode) 
             {
-                case SHAPE_LINE:
-                    draw_line(renderer, currentNode->shape.line, winWidth, winHeight);
-                    break;
-                case SHAPE_SQUARE:
-                    draw_square(renderer, currentNode->shape.square, winWidth, winHeight);
-                    break;
+            case SDL_SCANCODE_W:
+            case SDL_SCANCODE_S:
+                set_camera_speed(&(app->camera), 0);
+                break;
+            case SDL_SCANCODE_A:
+            case SDL_SCANCODE_D:
+                set_camera_side_speed(&(app->camera), 0);
+                break;
+            default:
+                break;
             }
-            currentNode = currentNode->next;
-        }
-
-        if (drawing)
-        {
-            switch(currentShape)
+            break;
+        case SDL_MOUSEBUTTONDOWN:
+            if (event.button.button == SDL_BUTTON_RIGHT) 
             {
-                case SHAPE_LINE:
-                    draw_line(renderer, temp_line, winWidth, winHeight);
-                    break;
-                case SHAPE_SQUARE:
-                    draw_square(renderer, temp_square, winWidth, winHeight);
-                    break;
+                is_right_mouse_down = true;
+                SDL_GetMouseState(&mouse_x, &mouse_y);
             }
+            break;
+        case SDL_MOUSEMOTION:
+            SDL_GetMouseState(&x, &y);
+            if (is_right_mouse_down) 
+            {
+                rotate_camera(&(app->camera), mouse_x - x, mouse_y - y);
+                mouse_x = x;
+                mouse_y = y;
+            }
+            break;
+        case SDL_MOUSEBUTTONUP:
+            if (event.button.button == SDL_BUTTON_RIGHT) 
+            {
+                is_right_mouse_down = false;
+            }
+            break;
+        case SDL_QUIT:
+            app->is_running = false;
+            break;
+        default:
+            break;
         }
-
-        SDL_RenderPresent(renderer);
-
-        //SDL_Delay(16);
     }
 }
 
-void cleanup_app(SDL_Window* window, SDL_GLContext gl_context, SDL_Renderer* renderer)
+void update_app(App* app)
 {
-    for (int i = 0; i < NUM_ICONS; i++)
-    {
-        if (icons[i].texture != NULL)
-        {
-            SDL_DestroyTexture(icons[i].texture);
-        }
+    double current_time;
+    double elapsed_time;
+
+    current_time = (double)SDL_GetTicks() / 1000;
+    elapsed_time = current_time - app->uptime;
+    app->uptime = current_time;
+
+    update_camera(&(app->camera), elapsed_time);
+    update_scene(&(app->scene));
+}
+
+void render_app(App* app)
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glMatrixMode(GL_MODELVIEW);
+
+    glPushMatrix();
+    set_view(&(app->camera));
+    render_scene(&(app->scene));
+    glPopMatrix();
+
+    if (app->camera.is_preview_visible) {
+        show_texture_preview();
     }
-    SDL_DestroyRenderer(renderer);
-    SDL_GL_DeleteContext(gl_context);
-    SDL_DestroyWindow(window);
+
+    SDL_GL_SwapWindow(app->window);
+}
+
+void destroy_app(App* app)
+{
+    if (app->gl_context != NULL) {
+        SDL_GL_DeleteContext(app->gl_context);
+    }
+
+    if (app->window != NULL) {
+        SDL_DestroyWindow(app->window);
+    }
+
     SDL_Quit();
 }

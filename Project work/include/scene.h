@@ -1,17 +1,41 @@
 #ifndef SCENE_H
 #define SCENE_H
 
+#include "camera.h"
+#include "texture.h"
 #include "addons.h"
+#include "objlist.h"
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+typedef struct Scene
+{
+    Model cube;
+    Material material;
+    GLuint texture_id;
+} Scene;
 
-void draw_sidebar(SDL_Renderer* renderer, int window_width, int window_height);
+/**
+ * Initialize the scene by loading models.
+ */
+void init_scene(Scene* scene);
 
-void hsv_to_rgb(float h, float s, float v, float* r, float* g, float* b);
+/**
+ * Set the lighting of the scene.
+ */
+void set_lighting();
 
-SDL_Texture* load_texture(SDL_Renderer* renderer, const char* file_path);
+/**
+ * Set the current material.
+ */
+void set_material(const Material* material);
 
-void load_icons(SDL_Renderer* renderer, Icon icons[], int NUM_ICONS);
+/**
+ * Update the scene.
+ */
+void update_scene(Scene* scene);
 
-#endif
+/**
+ * Render the scene objects.
+ */
+void render_scene(const Scene* scene);
+
+#endif /* SCENE_H */

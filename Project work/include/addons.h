@@ -6,16 +6,9 @@
 
 typedef enum 
 {
-    SHAPE_LINE,
-    SHAPE_SQUARE
+    SHAPE_PIPE,
+    SHAPE_CUBE
 } ShapeType;
-
-typedef struct Icon
-{
-    SDL_Texture* texture;
-    SDL_Rect rect;
-    ShapeType shape;
-} Icon;
 
 typedef struct RGBColor 
 {
@@ -28,25 +21,25 @@ typedef struct Point
     float y;
 } Point;
 
-typedef struct Line 
+typedef struct Pipe 
 {
     Point start;
     Point end;
     RGBColor color;
-} Line;
+} Pipe;
 
-typedef struct Square
+typedef struct Cube
 {
     Point top_left;
     float width;
     float height;
     RGBColor color;
-} Square;
+} Cube;
 
 typedef union Shapes
 {
-    Line line;
-    Square square;
+    Pipe pipe;
+    Cube cube;
 } Shapes;
 
 #endif

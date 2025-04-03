@@ -1,22 +1,21 @@
 #include "app.h"
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
 
+#include <stdio.h>
+
+/**
+ * Main function
+ */
 int main(int argc, char* argv[])
 {
-    SDL_Window* window = NULL;
-    SDL_GLContext gl_context = NULL;
-    SDL_Renderer* renderer = NULL;
+    App app;
 
-    int init_result = initialize_app(&window, &gl_context, &renderer);
-    if (init_result != 0) 
-    {
-        printf("Failed to initialize app: %d\n", init_result);
-        return 1;
+    init_app(&app, 800, 600);
+    while (app.is_running) {
+        handle_app_events(&app);
+        update_app(&app);
+        render_app(&app);
     }
-
-    run_app(window, renderer);
-    cleanup_app(window, gl_context, renderer);
+    destroy_app(&app);
 
     return 0;
 }
