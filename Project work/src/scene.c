@@ -1,17 +1,11 @@
 #include "scene.h"
+#include "draw.h"
+#include "addons.h"
 
-#include <obj/load.h>
-#include <obj/draw.h>
+#include <math.h>
 
 void init_scene(Scene* scene)
 {
-    // load_model(&(scene->cube), "assets/models/cube.obj");
-    // scene->texture_id = load_texture("assets/textures/cube.png");
-    load_model(&(scene->cube), "assets/models/cube.obj");
-    scene->texture_id = load_texture("assets/textures/cube.png");
-
-    glBindTexture(GL_TEXTURE_2D, scene->texture_id);
-
     scene->material.ambient.red = 0.0;
     scene->material.ambient.green = 0.0;
     scene->material.ambient.blue = 0.0;
@@ -75,5 +69,43 @@ void render_scene(const Scene* scene)
 {
     set_material(&(scene->material));
     set_lighting();
-    draw_model(&(scene->cube));
+}
+
+void hsv_to_rgb(float h, float s, float v, float* r, float* g, float* b)
+{
+    int i;
+    float f, p, q, t;
+
+    if (s == 0) {
+        *r = *g = *b = v;
+        return;
+    }
+
+    h /= 60;
+    i = floor(h);
+    f = h - i;
+    p = v * (1 - s);
+    q = v * (1 - s * f);
+    t = v * (1 - s * (1 - f));
+
+    switch (i) {
+        case 0:
+            *r = v; *g = t; *b = p;
+            break;
+        case 1:
+            *r = q; *g = v; *b = p;
+            break;
+        case 2:
+            *r = p; *g = v; *b = t;
+            break;
+        case 3:
+            *r = p; *g = q; *b = v;
+            break;
+        case 4:
+            *r = t; *g = p; *b = v;
+            break;
+        default:
+            *r = v; *g = p; *b = q;
+            break;
+    }
 }

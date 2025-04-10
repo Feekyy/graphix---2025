@@ -2,6 +2,8 @@
 #define DRAW_H
 
 #include "addons.h"
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
 
 RGBColor handle_color_wheel_click(Point click, int window_width, int window_height);
 

@@ -2,40 +2,37 @@
 #define SCENE_H
 
 #include "camera.h"
-#include "texture.h"
 #include "addons.h"
 #include "objlist.h"
+#include <GL/gl.h>
+
+#define NUM_ICONS 2
+
+typedef struct 
+{
+    GLuint texture_id;
+    Point position;
+    Size size;
+    ShapeType shape;
+} Icon;
 
 typedef struct Scene
 {
-    Model cube;
-    Material material;
+    ObjList obj_list;
     GLuint texture_id;
+    Icon icons[NUM_ICONS];
+    float window_width;
+    float window_height;
+    Material material;
 } Scene;
 
-/**
- * Initialize the scene by loading models.
- */
+
 void init_scene(Scene* scene);
-
-/**
- * Set the lighting of the scene.
- */
 void set_lighting();
-
-/**
- * Set the current material.
- */
 void set_material(const Material* material);
-
-/**
- * Update the scene.
- */
 void update_scene(Scene* scene);
-
-/**
- * Render the scene objects.
- */
 void render_scene(const Scene* scene);
+void show_texture_preview();
+void hsv_to_rgb(float h, float s, float v, float* r, float* g, float* b);
 
-#endif /* SCENE_H */
+#endif

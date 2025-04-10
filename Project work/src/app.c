@@ -1,6 +1,9 @@
 #include "app.h"
 
 #include <SDL2/SDL_image.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <stdio.h>
 
 void init_app(App* app, int width, int height)
 {
@@ -86,7 +89,8 @@ void reshape(GLsizei width, GLsizei height)
         x = (width - w) / 2;
         y = 0;
     }
-    else {
+    else 
+    {
         w = width;
         h = (int)((double)width / VIEWPORT_RATIO);
         x = 0;

@@ -1,8 +1,50 @@
 #ifndef ADDONS_H
 #define ADDONS_H
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include <GL/gl.h>
+
+typedef struct Material
+{
+    struct 
+    {
+        float red;
+        float green;
+        float blue;
+    } ambient;
+    struct 
+    {
+        float red;
+        float green;
+        float blue;
+    } diffuse;
+    struct 
+    {
+        float red;
+        float green;
+        float blue;
+    } specular;
+    float shininess;
+} Material;
+
+typedef struct 
+{
+    float width;
+    float height;
+} Size;
+
+typedef struct vec3
+{
+    float x;
+    float y;
+    float z;
+} vec3;
+
+typedef struct Color
+{
+    float red;
+    float green;
+    float blue;
+} Color;
 
 typedef enum 
 {
@@ -41,5 +83,7 @@ typedef union Shapes
     Pipe pipe;
     Cube cube;
 } Shapes;
+
+double degree_to_radian(double degree);
 
 #endif
