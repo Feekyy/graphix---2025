@@ -43,6 +43,25 @@ RGBColor handle_color_wheel_click(Point click, int window_width, int window_heig
     return selected_color;
 }
 
+void handle_sidebar_click(int x, int y, int window_width, int window_height, Scene *scene) 
+{
+    if (x > 20 && x < 130) 
+    {
+        if (y > window_height - 100 && y < window_height - 60) 
+        {
+            scene->current_shape = SHAPE_CUBE;
+        } else if (y > window_height - 160 && y < window_height - 120) 
+        {
+            scene->current_shape = SHAPE_SPHERE;
+        }
+    }
+
+    if (x < 150) 
+    {
+        scene->current_color = handle_color_wheel_click((Point){x, y}, window_width, window_height);
+    }
+}
+
 void draw_line(SDL_Renderer* renderer, Pipe pipe, int winWidth, int winHeight)
 {
 }

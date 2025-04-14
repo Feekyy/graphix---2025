@@ -211,7 +211,8 @@ void render_app(App* app)
     render_scene(&(app->scene));
     glPopMatrix();
 
-    if (app->camera.is_preview_visible) {
+    if (app->camera.is_preview_visible) 
+    {
         show_texture_preview();
     }
 
@@ -220,11 +221,13 @@ void render_app(App* app)
 
 void destroy_app(App* app)
 {
-    if (app->gl_context != NULL) {
+    if (app->gl_context != NULL) 
+    {
         SDL_GL_DeleteContext(app->gl_context);
     }
 
-    if (app->window != NULL) {
+    if (app->window != NULL) 
+    {
         SDL_DestroyWindow(app->window);
     }
 

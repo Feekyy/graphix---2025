@@ -18,12 +18,15 @@ typedef struct
 
 typedef struct Scene
 {
+    RGBColor current_color;
+    ShapeType current_shape;
     ObjList obj_list;
     GLuint texture_id;
     Icon icons[NUM_ICONS];
     float window_width;
     float window_height;
     Material material;
+    int obj_count;
 } Scene;
 
 
@@ -34,5 +37,9 @@ void update_scene(Scene* scene);
 void render_scene(const Scene* scene);
 void show_texture_preview();
 void hsv_to_rgb(float h, float s, float v, float* r, float* g, float* b);
+
+void draw_sidebar(int window_width, int window_height, Scene *scene);
+
+void draw_origin();
 
 #endif

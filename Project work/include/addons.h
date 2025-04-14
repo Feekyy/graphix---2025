@@ -48,9 +48,16 @@ typedef struct Color
 
 typedef enum 
 {
-    SHAPE_PIPE,
-    SHAPE_CUBE
+    SHAPE_CUBE,
+    SHAPE_SPHERE
 } ShapeType;
+
+typedef struct 
+{
+    vec3 position;
+    RGBColor color;
+    ShapeType shape;
+} Object3D;
 
 typedef struct RGBColor 
 {
