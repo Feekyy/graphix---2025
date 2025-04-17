@@ -3,6 +3,13 @@
 
 #include <GL/gl.h>
 
+typedef struct RGBColor
+{
+    unsigned char red;
+    unsigned char green;
+    unsigned char blue;
+} RGBColor;
+
 typedef struct Material
 {
     struct 
@@ -58,11 +65,6 @@ typedef struct
     RGBColor color;
     ShapeType shape;
 } Object3D;
-
-typedef struct RGBColor 
-{
-    unsigned char red, green, blue;
-} RGBColor;
 
 typedef struct Point 
 {

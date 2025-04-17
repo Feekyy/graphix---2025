@@ -3,6 +3,7 @@
 #include "addons.h"
 
 #include <math.h>
+#include <GL/glu.h>
 
 #define MAX_OBJECTS 5
 
@@ -38,19 +39,22 @@ void set_lighting()
 
 void set_material(const Material* material)
 {
-    float ambient_material_color[] = {
+    float ambient_material_color[] = 
+    {
         material->ambient.red,
         material->ambient.green,
         material->ambient.blue
     };
 
-    float diffuse_material_color[] = {
+    float diffuse_material_color[] = 
+    {
         material->diffuse.red,
         material->diffuse.green,
         material->diffuse.blue
     };
 
-    float specular_material_color[] = {
+    float specular_material_color[] = 
+    {
         material->specular.red,
         material->specular.green,
         material->specular.blue
@@ -80,7 +84,8 @@ void hsv_to_rgb(float h, float s, float v, float* r, float* g, float* b)
     int i;
     float f, p, q, t;
 
-    if (s == 0) {
+    if (s == 0) 
+    {
         *r = *g = *b = v;
         return;
     }
