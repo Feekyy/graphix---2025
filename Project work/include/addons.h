@@ -46,52 +46,46 @@ typedef struct vec3
     float z;
 } vec3;
 
-typedef struct Color
-{
-    float red;
-    float green;
-    float blue;
-} Color;
-
 typedef enum 
 {
     SHAPE_CUBE,
     SHAPE_SPHERE
 } ShapeType;
 
-typedef struct 
-{
-    vec3 position;
-    RGBColor color;
-    ShapeType shape;
-} Object3D;
-
 typedef struct Point 
 {
     float x;
     float y;
+    float z;
 } Point;
 
-typedef struct Pipe 
+typedef struct Cube 
 {
-    Point start;
-    Point end;
-    RGBColor color;
-} Pipe;
-
-typedef struct Cube
-{
-    Point top_left;
-    float width;
-    float height;
-    RGBColor color;
+    Point center;
+    float side_length;
+    Material material;
 } Cube;
+
+typedef struct Sphere
+{
+    Point center;
+    float radius;
+    Material material;
+} Sphere;
 
 typedef union Shapes
 {
-    Pipe pipe;
     Cube cube;
+    Sphere sphere;
 } Shapes;
+
+typedef struct Object3D
+{
+    vec3 position;
+    RGBColor color;
+    ShapeType shape;
+    float size;
+} Object3D;
 
 double degree_to_radian(double degree);
 

@@ -2,15 +2,23 @@
 #define DRAW_H
 
 #include "addons.h"
+#include "scene.h"
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 
 RGBColor handle_color_wheel_click(Point click, int window_width, int window_height);
 
-void draw_pipe(SDL_Renderer* renderer, Pipe pipe, int winWidth, int winHeight);
+void draw_sphere(float radius, int slices, int stacks, RGBColor color);
 
-void draw_cube(SDL_Renderer* renderer, Cube cube, int winWidth, int winHeight);
+void draw_cube(float size, RGBColor color);
 
-void draw_color_wheel(float h, float s, float v, float* r, float* g, float* b);
+void draw_color_wheel(int x, int y, int radius, RGBColor* current_color);
+
+void handle_mouse_click(Scene* scene, Camera* camera, int x, int y, int winWidth, int winHeight);
+
+void draw_sidebar(int window_width, int window_height, Scene *scene);
+
+void draw_origin();
 
 #endif

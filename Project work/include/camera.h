@@ -25,4 +25,6 @@ void set_camera_speed(Camera* camera, double speed);
 
 void set_camera_side_speed(Camera* camera, double speed);
 
+void set_camera_vertical_speed(Camera* camera, double speed);
+
 #endif

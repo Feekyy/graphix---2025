@@ -1,30 +1,37 @@
-#include "addons.h"
 #include "objlist.h"
- 
-#include <stdio.h>
 #include <stdlib.h>
 
-ObjNode* create_obj_node(Shapes shape, ShapeType type)
+ObjNode* create_obj_node(Object3D object)
 {
-    ObjNode* obj = malloc(sizeof(ObjNode));
-    obj->shape = shape;
-    obj->shapeType = type;
-    obj->next = NULL;
-    return obj;
+    ObjNode* new_node = (ObjNode*)malloc(sizeof(ObjNode));
+    if (new_node == NULL) 
+    {
+        return NULL;
+    }
+    new_node->object = object;
+    new_node->next = NULL;
+    return new_node;
 }
 
 ObjList* create_obj_list()
 {
-    ObjList* obj_list = malloc(sizeof(ObjList));
-    obj_list->head = NULL;
-    obj_list->count = 0;
-
-    return obj_list;
+    ObjList* new_list = (ObjList*)malloc(sizeof(ObjList));
+    if (new_list == NULL) 
+    {
+        return NULL;
+    }
+    new_list->head = NULL;
+    new_list->count = 0;
+    return new_list;
 }
 
-void add_object(ObjList* obj_list, Shapes shape, ShapeType type)
+void add_object(ObjList* obj_list, Object3D object)
 {
-    ObjNode* new_node = create_obj_node(shape, type);
+    ObjNode* new_node = create_obj_node(object);
+    if (new_node == NULL) 
+    {
+        return;
+    }
 
     if (obj_list->head == NULL) 
     {
@@ -44,9 +51,12 @@ void add_object(ObjList* obj_list, Shapes shape, ShapeType type)
 
 void delete_last_object(ObjList* obj_list)
 {
-    if (obj_list->count == 0 || obj_list->head == NULL) return;
+    if (obj_list->head == NULL) 
+    {
+        return;
+    }
 
-    if (obj_list->count == 1) 
+    if (obj_list->head->next == NULL) 
     {
         free(obj_list->head);
         obj_list->head = NULL;
@@ -55,28 +65,15 @@ void delete_last_object(ObjList* obj_list)
     }
 
     ObjNode* current = obj_list->head;
-    while (current->next->next != NULL)
+    ObjNode* previous = NULL;
+
+    while (current->next != NULL) 
     {
+        previous = current;
         current = current->next;
     }
-    free(current->next);
-    current->next = NULL;
+
+    free(current);
+    previous->next = NULL;
     obj_list->count--;
-}
-
-void switch_shapes(ObjList* obj_list, Shapes new_shape, ShapeType type, int overwrite)
-{
-    if (obj_list == NULL || obj_list->head == NULL || overwrite < 0 || overwrite >= obj_list->count) 
-    {
-        return;
-    }
-
-    ObjNode *current = obj_list->head;
-    for (int i = 0; i < overwrite && current != NULL; i++) 
-    {
-        current = current->next;
-    }
-
-    current->shape = new_shape;
-    current->shapeType = type;
 }

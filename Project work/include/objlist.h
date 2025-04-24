@@ -3,30 +3,24 @@
 
 #include "addons.h"
 
-typedef struct ObjNode ObjNode;
-
-typedef struct ObjNode
+typedef struct ObjNode 
 {
-    Shapes shape;
-    ShapeType shapeType;
-
-    ObjNode* next;
+    Object3D object;
+    struct ObjNode* next;
 } ObjNode;
 
-typedef struct ObjList
+typedef struct ObjList 
 {
     ObjNode* head;
     int count;
 } ObjList;
 
-ObjNode* create_obj_node(Shapes shape, ShapeType type);
+ObjNode* create_obj_node(Object3D object);
 
 ObjList* create_obj_list();
 
-void add_object(ObjList* obj_list, Shapes shape, ShapeType type);
+void add_object(ObjList* obj_list, Object3D object);
 
 void delete_last_object(ObjList* obj_list);
-
-void switch_shapes(ObjList* obj_list, Shapes Shape, ShapeType type, int overwrite);
 
 #endif
