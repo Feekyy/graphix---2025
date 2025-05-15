@@ -40,5 +40,6 @@ void update_scene(Scene* scene);
 void render_scene(const Scene* scene);
 void show_texture_preview();
 void hsv_to_rgb(float h, float s, float v, float* r, float* g, float* b);
+void load_shape_icons(Scene* scene);
 
 #endif

@@ -3,7 +3,9 @@
 #include "addons.h"
 
 #include <math.h>
+#include <stdio.h>
 #include <GL/glu.h>
+#include <SDL2/SDL_image.h>
 
 void init_scene(Scene* scene)
 {
