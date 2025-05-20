@@ -87,6 +87,7 @@ typedef struct Object3D
     float size;
 } Object3D;
 
+// Function to convert degrees to radians
 double degree_to_radian(double degree);
 
 #endif
