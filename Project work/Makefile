@@ -1,12 +1,7 @@
 all:
 	del main.exe
 	cls
-	gcc src/main.c src/app.c src/scene.c src/draw.c src/objlist.c src/camera.c src/gui.c src/addons.c \
-	-Iinclude/ -Iassets \
-	-lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lopengl32 -lglu32 \
-	-o main.exe \
-	-lSDL2_ttf
-	main.exe
+	gcc -Iinclude/ -Iassets src/main.c src/app.c src/scene.c src/draw.c src/objlist.c -o main.exe -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lopengl32 -g
 clean:
 	del main.exe
 	cls
