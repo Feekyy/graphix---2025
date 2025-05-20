@@ -61,7 +61,8 @@ void init_app(App* app, int width, int height)
         return;
     }
 
-    init_gui(app->renderer);
+    app->state = APP_STATE_MENU;
+    init_gui(app->renderer, width, height);
     init_opengl();
     reshape(width, height);
 
@@ -135,26 +136,33 @@ void handle_app_events(App* app)
 
     while (SDL_PollEvent(&event)) 
     {
-        GuiAction action = handle_gui_event(&event);
-        switch (action) 
+        if (app->state == APP_STATE_MENU)
         {
-            case GUI_NEW_WORLD:
-                printf("New World button clicked!\n");
-                clear_scene(app);
-                break;
-            case GUI_LOAD_WORLD:
-                printf("Load World button clicked!\n");
-                load_scene(app);
-                break;
-            case GUI_HELP:
-                printf("Help button clicked!\n");
-                break;
-            case GUI_EXIT:
-                app->is_running = false;
-                break;
-            default:
-                switch (event.type) 
-                {
+            GuiAction action = handle_gui_event(&event);
+            switch (action) 
+            {
+                case GUI_NEW_WORLD:
+                    clear_scene(app);
+                    app->state = APP_STATE_3D_SCENE;
+                    break;
+                case GUI_LOAD_WORLD:
+                    load_scene(app);
+                    app->state = APP_STATE_3D_SCENE;
+                    break;
+                case GUI_HELP:
+                    printf("Wellcome to my program! This is a simple object placement program that I created for university projects.\nAfter loading a scene, you can add new objects, delete old ones, and save your progress.\nPress F1 to clear the scene.\nPress Y to undo the last object.\nPress F5 to save the scene.\nPress F6 to load the scene\nPress ESC to go back to the menu.\n");
+                    break;
+                case GUI_EXIT:
+                    app->is_running = false;
+                    break;
+                default:
+                    break;
+            }
+        }
+        else if (app->state == APP_STATE_3D_SCENE)
+        {
+            switch (event.type) 
+            {
                 case SDL_KEYDOWN:
                     switch (event.key.keysym.scancode) 
                     {
@@ -188,6 +196,9 @@ void handle_app_events(App* app)
                         case SDL_SCANCODE_F6:
                             load_scene(app);
                             break;
+                        case SDL_SCANCODE_ESCAPE:
+                            app->state = APP_STATE_MENU;
+                            break;
                         default:
                             break;
                     }
@@ -207,27 +218,27 @@ void handle_app_events(App* app)
                         case SDL_SCANCODE_LSHIFT:
                             set_camera_vertical_speed(&(app->camera), 0);
                             break;
-                    default:
-                        break;
+                        default:
+                            break;
                     }
                     break;
                 case SDL_MOUSEBUTTONDOWN:
-                if (event.button.button == SDL_BUTTON_LEFT) 
-                {
-                    int mouse_x, mouse_y;
-                    SDL_GetMouseState(&mouse_x, &mouse_y);
+                    if (event.button.button == SDL_BUTTON_LEFT) 
+                    {
+                        int mouse_x, mouse_y;
+                        SDL_GetMouseState(&mouse_x, &mouse_y);
 
-                    int window_width, window_height;
-                    SDL_GetWindowSize(app->window, &window_width, &window_height);
+                        int window_width, window_height;
+                        SDL_GetWindowSize(app->window, &window_width, &window_height);
 
-                    handle_mouse_click(&(app->scene), &(app->camera), mouse_x, mouse_y, window_width, window_height);
-                }
-                else if (event.button.button == SDL_BUTTON_RIGHT) 
-                {
-                    is_right_mouse_down = true;
-                    SDL_GetMouseState(&mouse_x, &mouse_y);
-                }
-                break;
+                        handle_mouse_click(&(app->scene), &(app->camera), mouse_x, mouse_y, window_width, window_height);
+                    }
+                    else if (event.button.button == SDL_BUTTON_RIGHT) 
+                    {
+                        is_right_mouse_down = true;
+                        SDL_GetMouseState(&mouse_x, &mouse_y);
+                    }
+                    break;
                 case SDL_MOUSEMOTION:
                     SDL_GetMouseState(&x, &y);
                     if (is_right_mouse_down) 
@@ -243,12 +254,12 @@ void handle_app_events(App* app)
                         is_right_mouse_down = false;
                     }
                     break;
-                case SDL_QUIT:
-                    app->is_running = false;
-                    break;
-                default:
-                    break;
-                }
+            }
+        }
+
+        if (event.type == SDL_QUIT)
+        {
+            app->is_running = false;
         }
     }
 }
@@ -269,48 +280,61 @@ void update_app(App* app)
 void render_app(App* app)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glMatrixMode(GL_MODELVIEW);
 
-    glPushMatrix();
-    set_view(&(app->camera));
-    render_scene(&(app->scene));
-
-    if (app->scene.is_drawing) 
+    if (app->state == APP_STATE_MENU)
     {
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, app->window_width, app->window_height, 0, -1, 1);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_LIGHTING);
+        render_gui(app, app->renderer);
+        glEnable(GL_LIGHTING);
+        glEnable(GL_DEPTH_TEST);
+    }
+    else if (app->state == APP_STATE_3D_SCENE)
+    {
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        gluPerspective(45.0f, (GLfloat)app->window_width / (GLfloat)app->window_height, 0.1f, 100.0f);
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+
+        set_view(&(app->camera));
+        render_scene(&(app->scene));
+
+        if (app->scene.is_drawing) 
+        {
+            if (app->scene.current_shape == SHAPE_SPHERE) 
+            {
+                draw_sphere(0.5f, app->scene.current_color);
+            } 
+            else if (app->scene.current_shape == SHAPE_CUBE) 
+            {
+                draw_cube(1.0f, app->scene.current_color);
+            }
+        }
+
+        glPopMatrix();
+
+        if (app->camera.is_preview_visible) 
+        {
+            show_texture_preview();
+        }
+
         int window_width, window_height;
         SDL_GetWindowSize(app->window, &window_width, &window_height);
-
-        if (app->scene.current_shape == SHAPE_SPHERE) 
-        {
-            draw_sphere(0.5f, 32, 32, app->scene.current_color);
-        } 
-        else if (app->scene.current_shape == SHAPE_CUBE) 
-        {
-            draw_cube(1.0f, app->scene.current_color);
-        }
+        draw_sidebar(window_width, window_height, &(app->scene));
     }
-
-    glPopMatrix();
-
-    SDL_SetRenderDrawColor(app->renderer, 0, 0, 0, 255);
-    SDL_RenderClear(app->renderer);
-    render_gui(app->renderer);
-    SDL_RenderPresent(app->renderer);
-
-    SDL_GL_SwapWindow(app->window);
-
-    if (app->camera.is_preview_visible) 
-    {
-        show_texture_preview();
-    }
-
-    int window_width, window_height;
-    SDL_GetWindowSize(app->window, &window_width, &window_height);
-
-    draw_sidebar(window_width, window_height, &(app->scene));
 
     SDL_GL_SwapWindow(app->window);
 }
+
+
 
 void destroy_app(App* app)
 {
@@ -403,5 +427,4 @@ void clear_scene(App* app)
         delete_last_object(app->scene.obj_list);
     }
     app->undo_count = 0;
-    printf("Scene cleared.\n");
 }

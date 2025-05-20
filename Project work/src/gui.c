@@ -1,6 +1,11 @@
 #include "gui.h"
+#include "app.h"
+
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <stdio.h>
 #include <string.h>
 
 #define BUTTON_COUNT 4
@@ -8,56 +13,92 @@
 #define BUTTON_HEIGHT 50
 #define BUTTON_MARGIN 10
 
-typedef struct {
+typedef struct 
+{
     SDL_Rect rect;
+    GLuint texture;
     const char* label;
 } Button;
 
 static Button buttons[BUTTON_COUNT];
-static TTF_Font* font = NULL;
 
-void init_gui(SDL_Renderer* renderer) 
+void init_gui(SDL_Renderer* renderer, int window_width, int window_height) 
 {
-    TTF_Init();
-    font = TTF_OpenFont("assets/Arial.ttf", 24);
-
-    int start_y = 50;
+    int start_y = (window_height - (BUTTON_COUNT * (BUTTON_HEIGHT + BUTTON_MARGIN))) / 2;
     const char* labels[] = { "New World", "Load World", "Help", "Exit" };
+    const char* image_files[] = { "assets/new.png", "assets/load.png", "assets/help.png", "assets/exit.png" };
 
     for (int i = 0; i < BUTTON_COUNT; i++) 
     {
-        buttons[i].rect.x = 50;
+        buttons[i].rect.x = (window_width - BUTTON_WIDTH) / 2;
         buttons[i].rect.y = start_y + i * (BUTTON_HEIGHT + BUTTON_MARGIN);
         buttons[i].rect.w = BUTTON_WIDTH;
         buttons[i].rect.h = BUTTON_HEIGHT;
         buttons[i].label = labels[i];
+
+        SDL_Surface* surface = IMG_Load(image_files[i]);
+        if (!surface) 
+        {
+            printf("Failed to load image: %s\n", image_files[i]);
+            continue;
+        }
+
+        glGenTextures(1, &buttons[i].texture);
+        glBindTexture(GL_TEXTURE_2D, buttons[i].texture);
+        
+        int mode = GL_RGB;
+        if(surface->format->BytesPerPixel == 4) 
+        {
+            mode = GL_RGBA;
+        }
+        
+        glTexImage2D(GL_TEXTURE_2D, 0, mode, surface->w, surface->h, 0, mode, GL_UNSIGNED_BYTE, surface->pixels);
+        
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        SDL_FreeSurface(surface);
+
+        if (!buttons[i].texture) 
+        {
+            printf("Failed to create texture from %s\n", image_files[i]);
+        }
     }
 }
 
-void render_gui(SDL_Renderer* renderer) 
+void render_gui(struct App* app, SDL_Renderer* renderer) 
 {
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0, app->window_width, app->window_height, 0, -1, 1);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     for (int i = 0; i < BUTTON_COUNT; i++) 
     {
-        SDL_SetRenderDrawColor(renderer, 100, 100, 255, 255);
-        SDL_RenderFillRect(renderer, &buttons[i].rect);
-
-        if (font) {
-            SDL_Color textColor = { 255, 255, 255, 255 };
-            SDL_Surface* surface = TTF_RenderText_Blended(font, buttons[i].label, textColor);
-            SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
-
-            SDL_Rect textRect = {
-                buttons[i].rect.x + 10,
-                buttons[i].rect.y + 10,
-                surface->w,
-                surface->h
-            };
-
-            SDL_RenderCopy(renderer, texture, NULL, &textRect);
-            SDL_FreeSurface(surface);
-            SDL_DestroyTexture(texture);
-        }
+        glBindTexture(GL_TEXTURE_2D, buttons[i].texture);
+        
+        glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex2f(buttons[i].rect.x, buttons[i].rect.y);
+        glTexCoord2f(1, 0); glVertex2f(buttons[i].rect.x + buttons[i].rect.w, buttons[i].rect.y);
+        glTexCoord2f(1, 1); glVertex2f(buttons[i].rect.x + buttons[i].rect.w, buttons[i].rect.y + buttons[i].rect.h);
+        glTexCoord2f(0, 1); glVertex2f(buttons[i].rect.x, buttons[i].rect.y + buttons[i].rect.h);
+        glEnd();
     }
+
+    glDisable(GL_BLEND);
+    glDisable(GL_TEXTURE_2D);
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
 }
 
 GuiAction handle_gui_event(SDL_Event* event) 
@@ -81,10 +122,12 @@ GuiAction handle_gui_event(SDL_Event* event)
 
 void cleanup_gui() 
 {
-    if (font) 
+    for (int i = 0; i < BUTTON_COUNT; i++) 
     {
-        TTF_CloseFont(font);
-        font = NULL;
+        if (buttons[i].texture) 
+        {
+            glDeleteTextures(1, &buttons[i].texture);
+            buttons[i].texture = 0;
+        }
     }
-    TTF_Quit();
 }

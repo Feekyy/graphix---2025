@@ -9,7 +9,7 @@
 
 RGBColor handle_color_wheel_click(Point click, int window_width, int window_height);
 
-void draw_sphere(float radius, int slices, int stacks, RGBColor color);
+void draw_sphere(float radius, RGBColor color);
 
 void draw_cube(float size, RGBColor color);
 

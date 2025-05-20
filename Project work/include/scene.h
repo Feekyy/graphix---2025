@@ -4,7 +4,9 @@
 #include "camera.h"
 #include "addons.h"
 #include "objlist.h"
+
 #include <GL/gl.h>
+#include <stdbool.h>
 
 #define NUM_ICONS 2
 

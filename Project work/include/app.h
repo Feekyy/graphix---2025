@@ -6,7 +6,6 @@
 #include "gui.h"
 
 #include <SDL2/SDL.h>
-
 #include <stdbool.h>
 
 #define VIEWPORT_RATIO (4.0 / 3.0)
@@ -14,6 +13,12 @@
 
 #define MAX_UNDO 50
 #define SAVE_FILENAME "save/scene.sav"
+
+typedef enum 
+{
+    APP_STATE_MENU,
+    APP_STATE_3D_SCENE
+} AppState;
 
 typedef struct App
 {
@@ -28,6 +33,7 @@ typedef struct App
     int window_width;
     int window_height;
     SDL_Renderer* renderer;
+    AppState state;
 } App;
 
 void init_app(App* app, int width, int height);

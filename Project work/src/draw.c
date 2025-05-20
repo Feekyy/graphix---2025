@@ -9,6 +9,8 @@
 #include <math.h>
 
 #define MAX_OBJECTS 5
+#define SPHERE_SLICES 32
+#define SPHERE_STACKS 32
 
 RGBColor handle_color_wheel_click(Point click, int window_width, int window_height) 
 {
@@ -59,7 +61,6 @@ void handle_sidebar_click(int x, int y, int window_width, int window_height, Sce
             y >= window_height - icon_y && y <= window_height - (icon_y - icon_size)) 
         {
             scene->current_shape = i;
-            printf("Selected shape: %d\n", i);
             return;
         }
     }
@@ -70,7 +71,6 @@ void handle_sidebar_click(int x, int y, int window_width, int window_height, Sce
         if (new_color.red != 0 || new_color.green != 0 || new_color.blue != 0) 
         {
             scene->current_color = new_color;
-            printf("Selected color: (%d, %d, %d)\n", new_color.red, new_color.green, new_color.blue);
         }
     }
 }
@@ -111,14 +111,15 @@ void draw_color_wheel(int x, int y, int radius, RGBColor* current_color)
     glPointSize(1.0f);
 }
 
-void draw_sphere(float radius, int slices, int stacks, RGBColor color)
+void draw_sphere(float radius, RGBColor color)
 {
     glColor3ub(color.red, color.green, color.blue);
     glPushMatrix();
 
     GLUquadricObj *quadric = gluNewQuadric();
-    gluQuadricDrawStyle(quadric, GLU_LINE);
-    gluSphere(quadric, radius, slices, stacks);
+    gluQuadricDrawStyle(quadric, GLU_FILL);
+    gluQuadricNormals(quadric, GLU_SMOOTH);
+    gluSphere(quadric, radius, SPHERE_SLICES, SPHERE_STACKS);
     gluDeleteQuadric(quadric);
 
     glPopMatrix();
@@ -194,8 +195,6 @@ void handle_mouse_click(Scene* scene, Camera* camera, int x, int y, int winWidth
         new_object.size = (scene->current_shape == SHAPE_SPHERE) ? 0.5f : 1.0f;
 
         add_object(scene->obj_list, new_object);
-
-        printf("Added new object: Position (%.2f, %.2f, %.2f), Shape: %d, Color: (%d, %d, %d)\n", world_x, world_y, world_z, new_object.shape, new_object.color.red, new_object.color.green, new_object.color.blue);
     }
 }
 

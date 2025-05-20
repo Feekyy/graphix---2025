@@ -1,7 +1,11 @@
 #ifndef GUI_H
 #define GUI_H
 
+#include "app.h"
+
 #include <SDL2/SDL.h>
+
+struct App;
 
 typedef enum 
 {
@@ -12,9 +16,9 @@ typedef enum
     GUI_EXIT
 } GuiAction;
 
-void init_gui(SDL_Renderer* renderer);
+void init_gui(SDL_Renderer* renderer, int window_width, int window_height);
 
-void render_gui(SDL_Renderer* renderer);
+void render_gui(struct App* app, SDL_Renderer* renderer);
 
 GuiAction handle_gui_event(SDL_Event* event);
 

@@ -98,7 +98,7 @@ void render_scene(const Scene* scene)
         } 
         else if (current->object.shape == SHAPE_SPHERE) 
         {
-            draw_sphere(current->object.size / 2, 32, 32, current->object.color);
+            draw_sphere(current->object.size, current->object.color);
         }
 
         glPopMatrix();
