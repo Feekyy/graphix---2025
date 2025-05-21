@@ -4,4 +4,4 @@ Project work: making a 3D object placing program using openGL library, I used ba
 
 If you want to see for yourself the program, jsut clone my repo, then navigate your cmd into 'Project work' folder, then call 'make', and it will make an 'main.exe' file. Then just run it. (You will need that .dll file to make sure to work on most of the minGM-s.)
 
-Presentaion is about a small historic backgroud for 3D object editors, then how they are building an object.
+The presentation will cover a little historical background for 3D object editors, then how an object is built.
